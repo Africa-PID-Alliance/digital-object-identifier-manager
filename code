@@ -1,0 +1,94 @@
+import requests
+
+class DOIClient:
+    def __init__(self, api_key):
+        self.api_key = api_key
+        self.base_url = "https://api.doi.org/"
+
+    def create_doi(self, metadata):
+        headers = {
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        url = f"{self.base_url}dois"
+        response = requests.post(url, headers=headers, json=metadata)
+        if response.status_code == 201:
+            doi = response.json()["data"]["id"]
+            return doi
+        else:
+            raise Exception(f"DOI creation failed. Error: {response.text}")
+
+    def get_doi(self, doi):
+        headers = {
+            "Accept": "application/vnd.api+json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        url = f"{self.base_url}dois/{doi}"
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json()["data"]
+        else:
+            raise Exception(f"Failed to retrieve DOI information. Error: {response.text}")
+
+    def update_doi(self, doi, metadata):
+        headers = {
+            "Content-Type": "application/vnd.api+json",
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        url = f"{self.base_url}dois/{doi}"
+        response = requests.put(url, headers=headers, json=metadata)
+        if response.status_code == 200:
+            return response.json()["data"]
+        else:
+            raise Exception(f"DOI update failed. Error: {response.text}")
+
+    def delete_doi(self, doi):
+        headers = {
+            "Authorization": f"Bearer {self.api_key}"
+        }
+        url = f"{self.base_url}dois/{doi}"
+        response = requests.delete(url, headers=headers)
+        if response.status_code == 204:
+            return True
+        else:
+            raise Exception(f"DOI deletion failed. Error: {response.text}")
+
+# Example usage:
+
+api_key = "YOUR_API_KEY"
+client = DOIClient(api_key)
+
+metadata = {
+    "data": {
+        "type": "dois",
+        "attributes": {
+            "prefix": "10.1234",
+            "suffix": "example",
+            "url": "https://example.com"
+        }
+    }
+}
+
+# Create a DOI
+doi = client.create_doi(metadata)
+print(f"DOI created: {doi}")
+
+# Get DOI information
+doi_info = client.get_doi(doi)
+print(f"DOI information: {doi_info}")
+
+# Update DOI metadata
+new_metadata = {
+    "data": {
+        "type": "dois",
+        "attributes": {
+            "url": "https://updated-example.com"
+        }
+    }
+}
+updated_doi = client.update_doi(doi, new_metadata)
+print(f"Updated DOI information: {updated_doi}")
+
+# Delete DOI
+deleted = client.delete_doi(doi)
+print(f"DOI deleted: {deleted}")
